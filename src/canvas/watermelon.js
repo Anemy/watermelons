@@ -62,6 +62,11 @@ export default class Glitch {
     const amountOfWatermelons = 400;
 
     console.log('width, height', width, height);
+    let circular = false;
+    if (Math.random() > 0.6) {
+      circular = true;
+    }
+    console.log('circular', circular);
 
     for (let i = 0; i < amountOfWatermelons; i++) {
       const image = watermelonImages[Math.floor(Math.random() * watermelonImages.length)];
@@ -69,6 +74,7 @@ export default class Glitch {
 
       const aspect = imageDom.width / imageDom.height;
       const displaySize = Math.random() * (width / 20) + 3;
+
       // if (Math.random() > 0.95) {
       //   displaySize = Math.random() * 300;
       // }
@@ -76,9 +82,20 @@ export default class Glitch {
       // ctx.re();
       const imageWidth = displaySize;
       const imageHeight = displaySize / aspect;
-      const imageX = Math.floor(Math.random() * (width - (displaySize * 2))) + displaySize;
-      const imageY = Math.floor(Math.random() * (height - (displaySize * 2))) + displaySize;
-      console.log('render image', imageDom.width, imageDom.height, imageDom.width / imageDom.height, imageX, imageY, displaySize, displaySize / aspect);
+      let imageX = Math.floor(Math.random() * (width - (displaySize * 2))) + displaySize;
+      let imageY = Math.floor(Math.random() * (height - (displaySize * 2))) + displaySize;
+
+      if (circular) {
+        // const randomX = Math.random() * (width / 2) - (displaySize * 2);
+        const velocity = Math.random() * (Math.min(width, height) / 2);
+        const direction = Math.random() * Math.PI * 2;
+        const xRandom = Math.cos(direction) * velocity;
+        const yRandom = Math.sin(direction) * velocity;
+        imageX = Math.floor(width / 2 + xRandom);
+        imageY = Math.floor(height / 2 + yRandom);
+      }
+
+      // console.log('render image', imageDom.width, imageDom.height, imageDom.width / imageDom.height, imageX, imageY, displaySize, displaySize / aspect);
 
       ctx.save();
       // if (Math.random() > 0.8) {
