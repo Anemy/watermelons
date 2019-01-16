@@ -15,12 +15,26 @@ function downloadImage(canvasRef) {
     alert('Please let the image build before downloading.');
   }
 
-  const image = canvasRef.toDataURL('image/png')
-    .replace('image/png', 'image/octet-stream');
-  const link = document.createElement('a');
-  link.download = 'watermelons.png';
-  link.href = image;
-  link.click();
+  // const image = canvasRef.toDataURL('image/png')
+  //   .replace('image/png', 'image/octet-stream');
+
+
+  const fileName = 'watermelons.png';
+  // const blob = new Blob(image);
+  canvasRef.toBlob(blob => {
+    if (window.navigator.msSaveBlob) {
+      // FOR IE BROWSER
+      navigator.msSaveBlob(blob, fileName);
+    } else {
+      // FOR OTHER BROWSERS
+      const imageUrl = URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.download = fileName;
+      link.href = imageUrl;
+      link.click();
+    }
+  }); // , 'image/png', 0.5 // 50% quality.
 }
 
 const minAmountOfWatermelons = 5;
@@ -36,6 +50,7 @@ const WatermelonConfig = function(props) {
   this['Max Rotation °'] = 360;
   this.text = textToRender;
   this['Download Image'] = function() {};
+  this['Github'] = function() {};
   this.Circular = false;
   this['Image Size px'] = 2000;
   this['Glitch'] = false;
@@ -85,6 +100,7 @@ class Watermelon extends Component {
 
       downloadImage(this.hiddenCanvasRef);
     });
+    gui.add(watermelons, 'Github').onFinishChange(() => window.open('https://github.com/Anemy/watermelons'));
     gui.add(watermelons, 'Watermelons', minAmountOfWatermelons, maxAmountOfWatermelons, 1).onFinishChange(propertyUpdated);
     gui.add(watermelons, 'Max Size', 2, props.width / 4).onFinishChange(propertyUpdated);
     gui.add(watermelons, 'Min Size', 1, props.width / 4).onFinishChange(propertyUpdated);

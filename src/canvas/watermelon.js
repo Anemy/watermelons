@@ -35,6 +35,12 @@ export default class Glitch {
 
     const seeder = new MersenneTwister(config.Seed);
 
+    if (config.Glitch) {
+      // With glitch we apply a background.
+      ctx.fillStyle = 'rgb(255, 255, 255)';
+      ctx.fillRect(0, 0, width, height);
+    }
+
     // 1. Add the text.
     // this.textLayer(ctx, config, seeder, width, height);
 
