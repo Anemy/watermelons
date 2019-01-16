@@ -1,4 +1,5 @@
 const glitch = require('glitch-canvas');
+const MersenneTwister = require('mersennetwister');
 
 const maxRectangles = 20;
 const maxText = 100;
@@ -12,25 +13,14 @@ const watermelonImages = [
   'quarter-empty.png',
   'quarter.png'
 ];
+export { watermelonImages };
 
-for (let i = 0; i < watermelonImages.length; i++) {
-  const x = document.createElement('IMG');
-  x.setAttribute('src', `watermelon/${watermelonImages[i]}`);
-  x.setAttribute('id', watermelonImages[i]);
-  x.setAttribute('class', 'watermelon-image');
-  // x.setAttribute('width', '304');
-  // x.setAttribute('height', '228');
-  x.setAttribute('alt', 'The Pulpit Rock');
-  document.body.appendChild(x);
-}
-
-
-function getRandomGlitchParams() {
+function getRandomGlitchParams(seeder) {
   return {
-    seed:       Math.floor(Math.random() * 40), // Integer between 0 and 40.
-    quality:    99, // Math.floor(Math.random() * 40), // Integer between 0 and 40.
-    amount:     Math.floor(Math.random() * 20), // Integer between 0 and 40.
-    iterations: Math.floor(Math.random() * 10)  // Integer.
+    seed:       Math.floor(seeder.rnd() * 40), // Integer between 0 and 99.
+    quality:    99, // Math.floor(seeder.rnd() * 40), // Integer between 0 and 99.
+    amount:     Math.floor(seeder.rnd() * 20), // Integer between 0 and 99.
+    iterations: Math.floor(seeder.rnd() * 10)  // Integer.
   };
 }
 
@@ -40,55 +30,63 @@ export default class Glitch {
     this.backgroundStyle = 'rgb(255, 255, 255)';
   }
 
-  async glitch(ctx, text, width, height) {
-    // 1. Add the text.
-    // this.textLayer(ctx, text, width, height);
+  async glitch(ctx, config, width, height) {
+    ctx.clearRect(0, 0, width, height);
 
-    // ctx.fillRect(20 + Math.floor(Math.random() * 100), 20, 20, 20);
+    const seeder = new MersenneTwister(config.Seed);
+
+    // 1. Add the text.
+    // this.textLayer(ctx, config, seeder, width, height);
 
     // 2. Fill in random rectangles.
-    // this.rectangleLayer(ctx, width, height);
+    // this.rectangleLayer(ctx, config, seeder, width, height);
 
     // 3. Decolorize certain areas and glitch them.
 
-    this.drawWatermelons(ctx, width, height);
-
+    this.drawWatermelons(ctx, config, seeder, width, height);
 
     // 4. Some rgb split.
-    // await this.glitchCanvas(ctx, width, height);
+    if (config.Glitch) {
+      await this.glitchCanvas(ctx, seeder, width, height);
+    }
   }
 
-  drawWatermelons(ctx, width, height) {
-    const amountOfWatermelons = 400;
+  drawWatermelons(ctx, config, seeder, width, height) {
+    const {
+      Watermelons,
+      Circular
+    } = config;
+
+    const minSize = config['Min Size'];
+    const maxSize = config['Max Size'];
+    const minRotation = config['Min Rotation °'];
+    const maxRotation = config['Max Rotation °'];
 
     console.log('width, height', width, height);
-    let circular = false;
-    if (Math.random() > 0.6) {
-      circular = true;
-    }
-    console.log('circular', circular);
+    console.log('Rendering', Watermelons, 'watermelons.');
+    // console.log('circular', circular);
 
-    for (let i = 0; i < amountOfWatermelons; i++) {
-      const image = watermelonImages[Math.floor(Math.random() * watermelonImages.length)];
+    for (let i = 0; i < Watermelons; i++) {
+      const image = watermelonImages[Math.floor(seeder.rnd() * watermelonImages.length)];
       const imageDom = document.getElementById(image);
 
       const aspect = imageDom.width / imageDom.height;
-      const displaySize = Math.random() * (width / 20) + 3;
+      const displaySize = (seeder.rnd() * (maxSize - minSize)) + minSize;
 
-      // if (Math.random() > 0.95) {
-      //   displaySize = Math.random() * 300;
+      // if (seeder.rnd() > 0.95) {
+      //   displaySize = seeder.rnd() * 300;
       // }
       // ctx.restore();
       // ctx.re();
       const imageWidth = displaySize;
       const imageHeight = displaySize / aspect;
-      let imageX = Math.floor(Math.random() * (width - (displaySize * 2))) + displaySize;
-      let imageY = Math.floor(Math.random() * (height - (displaySize * 2))) + displaySize;
+      let imageX = Math.floor(seeder.rnd() * (width - (displaySize * 2))) + displaySize;
+      let imageY = Math.floor(seeder.rnd() * (height - (displaySize * 2))) + displaySize;
 
-      if (circular) {
-        // const randomX = Math.random() * (width / 2) - (displaySize * 2);
-        const velocity = Math.random() * (Math.min(width, height) / 2);
-        const direction = Math.random() * Math.PI * 2;
+      if (Circular) {
+        // const randomX = seeder.rnd() * (width / 2) - (displaySize * 2);
+        const velocity = seeder.rnd() * (Math.min(width, height) / 2);
+        const direction = seeder.rnd() * Math.PI * 2;
         const xRandom = Math.cos(direction) * velocity;
         const yRandom = Math.sin(direction) * velocity;
         imageX = Math.floor(width / 2 + xRandom);
@@ -97,21 +95,21 @@ export default class Glitch {
 
       // console.log('render image', imageDom.width, imageDom.height, imageDom.width / imageDom.height, imageX, imageY, displaySize, displaySize / aspect);
 
+      const rotation = ((seeder.rnd() * (maxRotation - minRotation)) + minRotation) * (Math.PI / 180);
+
       ctx.save();
-      // if (Math.random() > 0.8) {
+      // if (seeder.rnd() > 0.8) {
       //   ctx.globalCompositeOperation = 'darken';
       // }
-      // ctx.rotate(Math.random() * Math.PI * 2, imageX + (imageWidth / 2), imageY + (imageHeight / 2));
       ctx.translate(imageX, imageY);
-      ctx.rotate(Math.random() * Math.PI * 2, imageX, imageY);
-      // ctx.rotate(Math.random() * Math.PI * 2);
+      ctx.rotate(rotation, imageX, imageY);
       ctx.drawImage(imageDom, 0, 0, imageWidth, imageHeight);
       ctx.restore();
     }
   }
 
-  async glitchCanvas(ctx, width, height) {
-    const glitchParams = getRandomGlitchParams();
+  async glitchCanvas(ctx, seeder, width, height) {
+    const glitchParams = getRandomGlitchParams(seeder);
 
     const glitchImageData = await glitch(glitchParams)
       .fromImageData(ctx.getImageData(0, 0, width, height))
@@ -121,8 +119,8 @@ export default class Glitch {
     ctx.putImageData(glitchImageData, 0, 0);
   }
 
-  rectangleLayer(ctx, width, height) {
-    const rectangles = Math.floor(Math.random() * maxRectangles);
+  rectangleLayer(ctx, config, seeder, width, height) {
+    const rectangles = Math.floor(seeder.rnd() * maxRectangles);
 
     const maxRectangleWidth = width * (1 / 10);
     const maxRectangleHeight = height * (1 / 10);
@@ -131,25 +129,28 @@ export default class Glitch {
     ctx.strokeStyle = this.baseStyle;
 
     for (let i = 0; i < rectangles; i++) {
-      ctx.strokeRect(Math.floor(Math.random() * width), Math.floor(Math.random() * height), Math.floor(Math.random() * maxRectangleWidth), Math.floor(Math.random() * maxRectangleHeight));
-      ctx.fillRect(Math.floor(Math.random() * width), Math.floor(Math.random() * height), Math.floor(Math.random() * maxRectangleWidth), Math.floor(Math.random() * maxRectangleHeight));
+      ctx.strokeRect(Math.floor(seeder.rnd() * width), Math.floor(seeder.rnd() * height), Math.floor(seeder.rnd() * maxRectangleWidth), Math.floor(seeder.rnd() * maxRectangleHeight));
+      ctx.fillRect(Math.floor(seeder.rnd() * width), Math.floor(seeder.rnd() * height), Math.floor(seeder.rnd() * maxRectangleWidth), Math.floor(seeder.rnd() * maxRectangleHeight));
     }
   }
 
-  textLayer(ctx, text, width, height) {
+  textLayer(ctx, config, seeder, width, height) {
+    const {
+      text
+    } = config;
 
     const maxFontSize = Math.floor(width * (1 / 10));
-    const textCount = Math.floor(Math.random() * maxText);
+    const textCount = Math.floor(seeder.rnd() * maxText);
 
     for (let i = 0; i < textCount; i++) {
       ctx.save();
-      const x = Math.floor(Math.random() * width);
-      const y = Math.floor(Math.random() * height);
-      ctx.rotate(Math.random() * Math.PI * 2, x, y);
+      const x = Math.floor(seeder.rnd() * width);
+      const y = Math.floor(seeder.rnd() * height);
+      ctx.rotate(seeder.rnd() * Math.PI * 2, x, y);
 
-      ctx.font = `${Math.floor(Math.random() * maxFontSize)}px Arial`;
+      ctx.font = `${Math.floor(seeder.rnd() * maxFontSize)}px Arial`;
 
-      const randomTextSubstring = text.substring(Math.floor(Math.random() * (text.length + 1)), Math.floor(Math.random() * (text.length + 1)));
+      const randomTextSubstring = text.substring(Math.floor(seeder.rnd() * (text.length + 1)), Math.floor(seeder.rnd() * (text.length + 1)));
 
       ctx.fillText(randomTextSubstring, x,y);
       ctx.restore();
@@ -157,6 +158,6 @@ export default class Glitch {
   }
 
   // update(ctx) {
-  //   // ctx.fillRect(20 + Math.floor(Math.random() * 100), 20, 20, 20);
+  //   // ctx.fillRect(20 + Math.floor(seeder.rnd() * 100), 20, 20, 20);
   // }
 }

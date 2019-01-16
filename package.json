@@ -5,8 +5,10 @@
   "private": true,
   "dependencies": {
     "d3": "^5.1.0",
+    "dat.gui": "^0.7.5",
     "glitch-canvas": "^1.1.5",
     "lodash": "^4.17.5",
+    "mersennetwister": "^0.2.3",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
     "react-scripts": "1.1.1"
