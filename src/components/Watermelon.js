@@ -37,7 +37,7 @@ const WatermelonConfig = function(props) {
   this.text = textToRender;
   this['Download Image'] = function() {};
   this.Circular = false;
-  this['Image Size px'] = 3000;
+  this['Image Size px'] = 2000;
   this['Glitch'] = false;
   this['Seed'] = Math.floor(Math.random() * maxSeed);
 };
